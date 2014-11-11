@@ -331,6 +331,13 @@ class TVGuide(xbmcgui.WindowXML):
             program = self._getProgramFromControl(controlInFocus)
             if program is not None:
                 self._showContextMenu(program)
+        elif action.getId() == ACTION_SHOW_INFO and controlInFocus is not None: #modcat1d
+            program = self._getProgramFromControl(controlInFocus)
+            if program is not None:
+                # xbmcgui.Dialog().ok(program.title, program.description)
+                d = ProgramInfoDialog(program)
+                d.doModal()
+                del d
 
     @buggalo.buggalo_try_except({'method': 'TVGuide.onClick'})
     def onClick(self, controlId):
@@ -1375,3 +1382,54 @@ class ChooseStreamAddonDialog(xbmcgui.WindowXMLDialog):
     @buggalo.buggalo_try_except({'method': 'ChooseStreamAddonDialog.onFocus'})
     def onFocus(self, controlId):
         pass
+
+#modcat1d
+class ProgramInfoDialog(xbmcgui.WindowXMLDialog):
+    C_MAIN_OSD_TITLE = 6001
+    C_MAIN_OSD_TIME = 6002
+    C_MAIN_OSD_DESCRIPTION = 6003
+    C_MAIN_OSD_CHANNEL_LOGO = 6004
+    C_MAIN_OSD_CHANNEL_TITLE = 6005
+
+    def __new__(cls, program):
+        return super(ProgramInfoDialog, cls).__new__(cls, 'script-tvguide-info.xml',
+                                                           ADDON.getAddonInfo('path'))
+
+    def __init__(self, program):
+        super(ProgramInfoDialog, self).__init__()
+        self.program = program
+
+    @buggalo.buggalo_try_except({'method': 'ProgramInfoDialog.onInit'})
+    def onInit(self):
+        self.getControl(self.C_MAIN_OSD_TITLE).setLabel('[B]%s[/B]' % self.program.title)
+        self.getControl(self.C_MAIN_OSD_DESCRIPTION).setText(self.formatDescription(self.program.description))
+        if self.program.startDate or self.program.endDate:
+            self.getControl(self.C_MAIN_OSD_TIME).setLabel('[B]%s - %s[/B]' % (self.formatTime(self.program.startDate), self.formatTime(self.program.endDate)))
+        else:
+            self.getControl(self.C_MAIN_OSD_TIME).setLabel('')
+        self.getControl(self.C_MAIN_OSD_CHANNEL_TITLE).setLabel(self.program.channel.title)
+        if self.program.imageSmall is not None:
+            self.getControl(self.C_MAIN_OSD_CHANNEL_LOGO).setImage(self.program.imageSmall.encode('utf-8'))
+        else:
+            self.getControl(self.C_MAIN_OSD_CHANNEL_LOGO).setImage('')
+
+    @buggalo.buggalo_try_except({'method': 'ProgramInfoDialog.onAction'})
+    def onAction(self, action):
+        if action.getId() in [ACTION_PARENT_DIR, ACTION_PREVIOUS_MENU, KEY_NAV_BACK]:
+            self.close()
+
+    @buggalo.buggalo_try_except({'method': 'ProgramInfoDialog.onFocus'})
+    def onFocus(self, controlId):
+        pass
+
+    def formatTime(self, timestamp):
+        if timestamp:
+            format = xbmc.getRegion('time').replace(':%S', '').replace('%H%H', '%H')
+            return timestamp.strftime(format)
+        else:
+            return ''
+
+    def formatDescription(self, description):
+        desc = description.replace(' Actors: ', '[CR][CR][B]Actors:[/B] ')
+        desc = desc.replace(' (comercial). ', ' (comercial)[CR][CR]')
+        return desc

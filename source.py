@@ -853,8 +853,12 @@ class XMLTVSource(Source):
         self.xmltvFile = addon.getSetting('xmltv.file')
         self.xmltvUrl = addon.getSetting('xmltv.url')
 
-        if not self.xmltvFile or not xbmcvfs.exists(self.xmltvFile):
-            raise SourceNotConfiguredException()
+        if self.xmltvType == XMLTVSource.TYPE_LOCAL_FILE: #modcat1a
+            if not self.xmltvFile or not xbmcvfs.exists(self.xmltvFile):
+                raise SourceNotConfiguredException()
+        else: #modcat1a
+            if not self.xmltvUrl:
+                raise SourceNotConfiguredException()
 
     def getDataFromExternal(self, date, progress_callback=None):
         if self.xmltvType == XMLTVSource.TYPE_LOCAL_FILE:
@@ -873,12 +877,20 @@ class XMLTVSource(Source):
         return self.parseXMLTV(context, f, size, self.logoFolder, progress_callback)
 
     def isUpdated(self, channelsLastUpdated, programLastUpdate):
-        if channelsLastUpdated is None or not xbmcvfs.exists(self.xmltvFile):
-            return True
+        if self.xmltvType == XMLTVSource.TYPE_LOCAL_FILE: #modcat1a
+            if channelsLastUpdated is None or not xbmcvfs.exists(self.xmltvFile):
+                return True
 
-        stat = xbmcvfs.Stat(self.xmltvFile)
-        fileUpdated = datetime.datetime.fromtimestamp(stat.st_mtime())
-        return fileUpdated > channelsLastUpdated
+            stat = xbmcvfs.Stat(self.xmltvFile)
+            fileUpdated = datetime.datetime.fromtimestamp(stat.st_mtime())
+            return fileUpdated > channelsLastUpdated
+        else: #modcat1a
+            today = datetime.datetime.now()
+            if channelsLastUpdated is None or channelsLastUpdated.day != today.day:
+                return True
+            if programsLastUpdated is None or programsLastUpdated.day != today.day:
+                return True
+            return False
 
     def parseXMLTVDate(self, dateString):
         if dateString is not None:

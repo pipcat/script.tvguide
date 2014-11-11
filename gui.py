@@ -1402,7 +1402,7 @@ class ProgramInfoDialog(xbmcgui.WindowXMLDialog):
     @buggalo.buggalo_try_except({'method': 'ProgramInfoDialog.onInit'})
     def onInit(self):
         self.getControl(self.C_MAIN_OSD_TITLE).setLabel('[B]%s[/B]' % self.program.title)
-        self.getControl(self.C_MAIN_OSD_DESCRIPTION).setText(self.formatDescription(self.program.description))
+        self.getControl(self.C_MAIN_OSD_DESCRIPTION).setText(self.program.description)
         if self.program.startDate or self.program.endDate:
             self.getControl(self.C_MAIN_OSD_TIME).setLabel('[B]%s - %s[/B]' % (self.formatTime(self.program.startDate), self.formatTime(self.program.endDate)))
         else:
@@ -1429,7 +1429,3 @@ class ProgramInfoDialog(xbmcgui.WindowXMLDialog):
         else:
             return ''
 
-    def formatDescription(self, description):
-        desc = description.replace(' Actors: ', '[CR][CR][B]Actors:[/B] ')
-        desc = desc.replace(' (comercial). ', ' (comercial)[CR][CR]')
-        return desc
